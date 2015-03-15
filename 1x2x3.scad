@@ -35,14 +35,27 @@ module center_pin() {
       pin(h=pin_h+cl/2, r=pin_r, lh=pin_lh, lt=pin_lt, t=pin_t, side=true);
 }
 
-module slice(centerWidth = 20, tilt1 = 0, tilt2 = 0) {
-  edgePiece(centerWidth,+1,+1,tilt1) children();
-  edgePiece(centerWidth,+1,-1,tilt1) children();
-  centerPiece(centerWidth, +1) children();
-  center_pin();
-  centerPiece(centerWidth, -1) children();
-  edgePiece(centerWidth,-1,+1,tilt2) children();
-  edgePiece(centerWidth,-1,-1,tilt2) children();
+module slice(centerWidth = 20, tilt1 = 0, tilt2 = 0, preview=false) {
+  if (preview) {
+    rotate([-tilt1, 0, 0]) edgePiece(centerWidth,+1,+1,tilt1) children();
+    rotate([-tilt1, 0, 0]) edgePiece(centerWidth,+1,-1,tilt1) children();
+    centerPiece(centerWidth, +1) children();
+    centerPiece(centerWidth, -1) children();
+    rotate([-tilt2, 0, 0]) edgePiece(centerWidth,-1,+1,tilt2) children();
+    rotate([-tilt2, 0, 0]) edgePiece(centerWidth,-1,-1,tilt2) children();
+  } else {
+    for(x=[-1:1]) {
+      for(y=[-1, 1]) {
+        translate([20 * x, 40 * y, -cl/2]) rotate([y * 90, 0, 0])
+          if (x == 0) {
+            centerPiece(centerWidth, y) children();
+          } else {
+            edgePiece(centerWidth, x, y, x == 1 ? tilt2 : tilt1) children();
+          }
+      }
+    }
+    rotate([0,0,90]) translate([0, 0, pin_r*1.125-pin_lt]) center_pin();
+  }
 }
 
 module centerPiece(centerWidth, ySignal) {
@@ -56,8 +69,6 @@ module centerPiece(centerWidth, ySignal) {
 
     //  Pin hole
     rotate([90,0,0]) pinhole(h=pin_h, r=pin_r, lh=pin_lh, lt=pin_lt, t=pin_t, tight=pin_tight);
-
-
   }
 }
 
@@ -98,6 +109,6 @@ module quadrant(xSignal, ySignal) {
   mirror([xSignal - 1, 0, 0]) mirror([0, ySignal - 1, 0]) children();
 }
 
-slice(tilt1=30, tilt2=10)
+slice(tilt1=30, tilt2=10,preview=false)
 //  translate([3,3,0]) cube([60,40,20], center=true);
   rotate(15,[0,1,0]) translate([0,5,0]) cylinder(r=30,h=20,center=true);
